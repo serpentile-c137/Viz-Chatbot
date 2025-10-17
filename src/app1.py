@@ -216,7 +216,9 @@ if uploaded_file is not None:
     graph.set_entry_point("chatbot")
 
     app = graph.compile(checkpointer=memory)
-    config = {"configurable": {"thread_id": "data_chat_session"}}
+    # Use a dataset-specific thread id so memory is scoped to the uploaded CSV
+    thread_id = f"data_chat_session::{getattr(uploaded_file, 'name', 'unknown')}"
+    config = {"configurable": {"thread_id": thread_id}}
 
     # --- Chat Interface ---
     if "chat_history" not in st.session_state:
@@ -245,16 +247,15 @@ if uploaded_file is not None:
         user_message = HumanMessage(content=user_input)
         st.session_state.chat_history.append(user_message)
         
-        # Prepare messages for the agent (including context about the dataset)
-        context_message = HumanMessage(
-            content=f"You are helping analyze a dataset with {df.shape[0]} rows and {df.shape[1]} columns. "
-            f"Available columns: {', '.join(df.columns)}. "
-            f"Please help the user with their question: {user_input}"
+        # Prepare a short dataset-context message and pass the full chat history so memory and agent receive prior turns
+        system_context = HumanMessage(
+            content=f"Dataset context: {df.shape[0]} rows, {df.shape[1]} cols. Columns: {', '.join(df.columns)}."
         )
-        
-        # Invoke the agent
+        messages_for_agent = [system_context] + st.session_state.chat_history
+
+        # Invoke the agent with the full messages list so the checkpointer can persist and restore conversation
         try:
-            result = app.invoke({"messages": [context_message]}, config=config)
+            result = app.invoke({"messages": messages_for_agent}, config=config)
             
             # Get the last AI message from the result
             ai_messages = [msg for msg in result["messages"] if isinstance(msg, AIMessage)]
