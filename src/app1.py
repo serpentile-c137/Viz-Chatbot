@@ -3,13 +3,15 @@
 import streamlit as st
 import pandas as pd
 import io
-from typing import List, Dict, Any
-
+from typing import List, Dict, Any, TypedDict
+from dotenv import load_dotenv
 from langgraph.graph import add_messages, StateGraph, END
 from langchain_groq import ChatGroq
 from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import ToolNode
+
+load_dotenv()
 
 # --- Visualization tools ---
 def make_bar_chart(df: pd.DataFrame, column: str):
@@ -60,9 +62,10 @@ if uploaded_file is not None:
     llm_with_tools = llm.bind_tools(tools)
 
     memory = MemorySaver()
+    tool_node = ToolNode(tools=tools)
     graph = StateGraph(BasicChatState)
     graph.add_node("chatbot", lambda state: llm_with_tools.invoke(state["messages"]))
-    graph.add_node("toolnode", ToolNode(tools))
+    graph.add_node("toolnode", tool_node)
 
     # Flow control logic reused from reference
     def tools_router(state: BasicChatState):
