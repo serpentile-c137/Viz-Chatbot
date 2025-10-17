@@ -40,25 +40,29 @@ if uploaded_file is not None:
 
     # Tool definitions for visualization
     def bar_chart_tool(column: str) -> str:
+        """Display a bar chart of value counts for the given column in the uploaded dataframe."""
         make_bar_chart(df, column)
         return f"Bar chart for '{column}' displayed."
 
     def scatter_tool(x: str, y: str) -> str:
+        """Display a scatter plot using the given x and y columns from the uploaded dataframe."""
         make_scatter_plot(df, x, y)
         return f"Scatterplot for '{x}' vs '{y}' displayed."
 
     def pie_chart_tool(column: str) -> str:
+        """Display a pie chart of value distribution for the given column in the uploaded dataframe."""
         make_pie_chart(df, column)
         return f"Pie chart for '{column}' displayed."
 
     # Agent tools registry
+    # LangChain expects tools to be callables (or tool objects), not dicts. Provide the functions directly.
     tools = [
-        {"name": "bar_chart", "description": "Plot a bar chart of a column", "func": bar_chart_tool},
-        {"name": "scatter_plot", "description": "Plot a scatterplot of two columns", "func": scatter_tool},
-        {"name": "pie_chart", "description": "Plot a pie chart of a column", "func": pie_chart_tool},
+        bar_chart_tool,
+        scatter_tool,
+        pie_chart_tool,
     ]
 
-    llm = ChatGroq(model="llama-3-8b-instant")
+    llm = ChatGroq(model="llama-3.1-8b-instant")
     llm_with_tools = llm.bind_tools(tools)
 
     memory = MemorySaver()
@@ -77,7 +81,13 @@ if uploaded_file is not None:
     graph.add_conditional_edges("chatbot", tools_router)
     graph.add_edge("toolnode", "chatbot")
     graph.set_entry_point("chatbot")
-    app = graph.compile(checkpointer=memory, thread_id="1")
+    app = graph.compile(checkpointer=memory)
+
+    config = {
+        "configurable": {
+            "thread_id": "1"
+        }
+    }
 
     # --- Interactive chat loop ---
     if "chat_history" not in st.session_state:
@@ -88,7 +98,7 @@ if uploaded_file is not None:
     if user_input:
         # Streamlit: maintain history for conversational context
         st.session_state.chat_history.append(HumanMessage(content=user_input))
-        result = app.invoke({"messages": st.session_state.chat_history}, config={})
+        result = app.invoke({"messages": st.session_state.chat_history}, config=config)
         response = result["messages"][-1].content
         st.session_state.chat_history.append(AIMessage(content=response))
         st.markdown(f"**AI:** {response}")
