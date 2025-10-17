@@ -3,7 +3,6 @@ from langgraph.graph import add_messages, StateGraph, END
 from langchain_groq import ChatGroq
 from langchain_core.messages import AIMessage, HumanMessage
 from dotenv import load_dotenv
-from langchain_community.tools.tavily_search import TavilySearchResults
 from langgraph.prebuilt import ToolNode
 from datetime import datetime
 
@@ -12,12 +11,10 @@ load_dotenv()
 class BasicChatBot(TypedDict):
     messages: Annotated[list, add_messages]
 
-# Simple tool to return today's date using the standard library
-
 
 def date_tool(query: str | None = None) -> str:
-    """Return today's date as an ISO-formatted string. The `query` param is
-    accepted to match the signature expected by some tool wrappers.
+    """
+    Return today's date as an ISO-formatted string. 
     """
     return datetime.now().date().isoformat()
 
