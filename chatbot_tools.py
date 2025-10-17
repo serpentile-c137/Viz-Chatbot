@@ -5,14 +5,23 @@ from langchain_core.messages import AIMessage, HumanMessage
 from dotenv import load_dotenv
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langgraph.prebuilt import ToolNode
+from datetime import datetime
 
 load_dotenv()
 
 class BasicChatBot(TypedDict):
     messages: Annotated[list, add_messages]
 
-search_tool = TavilySearchResults(max_results=2)
-tools = [search_tool]
+# Simple tool to return today's date using the standard library
+
+
+def date_tool(query: str | None = None) -> str:
+    """Return today's date as an ISO-formatted string. The `query` param is
+    accepted to match the signature expected by some tool wrappers.
+    """
+    return datetime.now().date().isoformat()
+
+tools = [date_tool]
 
 llm = ChatGroq(model="llama-3.1-8b-instant")
 
