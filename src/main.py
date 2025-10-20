@@ -10,7 +10,7 @@ from datetime import datetime
 from pandas.api.types import is_numeric_dtype
 
 # --- 0) Load CSV ---
-DF_PATH = "titanic.csv"
+DF_PATH = "data/titanic.csv"
 df = pd.read_csv(DF_PATH)
 
 # === Plot directory + state for "last plot" ===
@@ -182,14 +182,19 @@ tools = [
 ]
 
 # --- 3) Configure LLM ---
-USE_OPENAI = bool(os.getenv("OPENAI_API_KEY"))
+# USE_OPENAI = bool(os.getenv("OPENAI_API_KEY"))
+from dotenv import load_dotenv
+load_dotenv()
 
-if USE_OPENAI:
-    from langchain_openai import ChatOpenAI
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.1)
-else:
-    from langchain_community.chat_models import ChatOllama
-    llm = ChatOllama(model="llama3.1:8b", temperature=0.1)
+# if USE_OPENAI:
+#     from langchain_groq import ChatGroq
+#     llm = ChatGroq(model="llama-3.1-8b-instant")
+# else:
+#     from langchain_community.chat_models import ChatOllama
+#     llm = ChatOllama(model="llama3.1:8b", temperature=0.1)
+
+from langchain_groq import ChatGroq
+llm = ChatGroq(model="llama-3.1-8b-instant")
 
 # --- 4) Narrow policy/prompt (agent behavior) ---
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
