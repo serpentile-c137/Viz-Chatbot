@@ -170,6 +170,109 @@ def tool_plot_bar_counts(params: str) -> str:
     LAST_PLOT_PATH = path
     return f"Bar chart created for '{column}'. PLOT:{path}"
 
+@tool
+def head_tool(n: int = 5) -> str:
+    """Returns the first n rows of the dataset as a CSV string."""
+    return df.head(n).to_csv(index=False)
+
+@tool
+def tail_tool(n: int = 5) -> str:
+    """Returns the last n rows of the dataset as a CSV string."""
+    return df.tail(n).to_csv(index=False)
+
+@tool
+def sample_tool(n: int = 5) -> str:
+    """Returns a random sample of n rows from the dataset as a CSV string."""
+    return df.sample(n).to_csv(index=False)
+
+@tool
+def to_csv_tool(dummy: str) -> str:
+    """Exports the entire dataset to a CSV file and returns the file path."""
+    path = os.path.join(PLOT_DIR, "exported_data.csv")
+    df.to_csv(path, index=False)
+    return f"Dataset exported to {path}"
+
+@tool
+def data_info_tool(dummy: str) -> str:
+    """Returns information about the dataset (non-null counts, dtypes)."""
+    from io import StringIO
+    buffer = StringIO()
+    df.info(buf=buffer)
+    return buffer.getvalue()
+
+@tool
+def column_stats_tool(column: str) -> str:
+    """Returns basic statistics for a numeric column."""
+    if column not in df.columns or not is_numeric_dtype(df[column]):
+        return f"Error: column '{column}' is not numeric or does not exist."
+    stats = df[column].describe()
+    return stats.to_csv(index=True)
+
+@tool
+def value_counts_tool(column: str) -> str:
+    """Returns value counts for a column as a CSV string."""
+    if column not in df.columns:
+        return f"Error: column '{column}' does not exist."
+    counts = df[column].value_counts()
+    return counts.to_csv(index=True)
+
+@tool
+def histogram_tool(params: str) -> str:
+    """Creates a histogram for a numeric column."""
+    # ...similar logic as tool_plot_hist...
+    return tool_plot_hist(params)
+
+@tool
+def correlation_tool(columns: str) -> str:
+    """
+    Returns the correlation matrix for specified numeric columns.
+    Input format: "columns=age, fare".
+    """
+    cols = [c.strip() for c in columns.split(",") if c.strip() in df.columns]
+    if not cols or not all(is_numeric_dtype(df[c]) for c in cols):
+        return "Error: provide valid numeric columns."
+    corr = df[cols].corr()
+    return corr.to_csv(index=True)
+
+@tool
+def filter_tool(condition: str) -> str:
+    """
+    Filters the dataset based on a condition and returns the filtered rows as CSV.
+    Example condition: "age > 30 and sex == 'male'".
+    """
+    try:
+        filtered_df = df.query(condition)
+        return filtered_df.to_csv(index=False)
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+@tool
+def scatter_tool(params: str) -> str:
+    """Creates a scatter plot for two numeric columns."""
+    # ...similar logic as tool_plot_scatter...
+    return tool_plot_scatter(params)
+
+@tool
+def pie_chart_tool(column: str) -> str:
+    """
+    Creates a pie chart for a categorical column and saves it as PNG.
+    Input: "column=sex".
+    """
+    global LAST_PLOT_PATH
+    if column not in df.columns:
+        return f"Error: column '{column}' does not exist."
+    counts = df[column].value_counts()
+    if counts.empty:
+        return f"Error: column '{column}' has no values."
+
+    plt.figure()
+    counts.plot(kind="pie", autopct='%1.1f%%', startangle=90, figsize=(6, 6))
+    plt.ylabel("")
+    plt.title(f"Pie Chart of '{column}'")
+    path = _save_current_fig(prefix=f"pie-{column}")
+    LAST_PLOT_PATH = path
+    return f"Pie chart created for '{column}'. PLOT:{path}"
+
 # --- 2) Wire up tools for LangChain ---
 tools = [
     tool_schema,
@@ -180,6 +283,21 @@ tools = [
     tool_plot_scatter,
     tool_plot_bar_counts,
 ]
+
+tools.extend([
+    head_tool,
+    tail_tool,
+    sample_tool,
+    to_csv_tool,
+    data_info_tool,
+    column_stats_tool,
+    value_counts_tool,
+    histogram_tool,
+    correlation_tool,
+    filter_tool,
+    scatter_tool,
+    pie_chart_tool,
+])
 
 # --- 3) Configure LLM ---
 # USE_OPENAI = bool(os.getenv("OPENAI_API_KEY"))
