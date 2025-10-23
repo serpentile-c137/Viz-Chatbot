@@ -1,35 +1,35 @@
 # Import necessary libraries.
-import openai
-from langchain.llms import AzureOpenAI
-from langchain.agents import create_pandas_dataframe_agent
-import pandas as pd
+# import openai
+# from langchain.llms import AzureOpenAI
+from langchain_groq import ChatGroq
+from langchain.agents import initialize_agent, Tool
+from dotenv import load_dotenv
+import os
+from langchain.tools import Tool
 
-# Configure the baseline configuration of the OpenAI library for Azure OpenAI Service.
-OPENAI_API_KEY = "PLEASE_ENTER_YOUR_OWNED_AOAI_SERVICE_KEY"
-OPENAI_API_BASE = "https://PLESAE_ENTER_YOUR_OWNED_AOAI_RESOURCE_NAME.openai.azure.com/"
-OPENAI_DEPLOYMENT_NAME = "PLEASE_ENTER_YOUR_OWNED_AOAI_GPT_MODEL_NAME"
-OPENAI_MODEL_NAME = "text-davinci-003"
-OPENAI_API_VERSION = "2023-05-15"
-OPENAI_API_TYPE = "azure"
-openai.api_key = OPENAI_API_KEY
-openai.api_base = OPENAI_API_BASE
-openai.api_version = OPENAI_API_VERSION
-openai.api_type = OPENAI_API_TYPE
+load_dotenv()
 
-# Define a function to create Pandas DataFrame agent from a CSV file.
-def create_pd_agent(filename: str):
-    # Initiate a connection to the LLM from Azure OpenAI Service via LangChain.
-    llm = AzureOpenAI(openai_api_key=OPENAI_API_KEY, 
-                      deployment_name=OPENAI_DEPLOYMENT_NAME, 
-                      model_name=OPENAI_MODEL_NAME, 
-                      openai_api_version=OPENAI_API_VERSION,
-                      openai_api_type=OPENAI_API_TYPE)
+def create_pd_agent(dataframe, llm=None):
+    """
+    Custom wrapper for creating a pandas dataframe agent.
+    """
+    if llm is None:
+        llm = ChatGroq(model='llama-3.3-70b-versatile')
 
-    # Read the CSV file into a Pandas DataFrame.
-    df = pd.read_csv(filename)
+    # Define a tool for interacting with the dataframe
+    def query_dataframe(query: str) -> str:
+        # Implement your logic for querying the dataframe here
+        return "Query result placeholder"
 
-    # Create a Pandas DataFrame agent from the CSV file.
-    return create_pandas_dataframe_agent(llm, df, verbose=False)
+    tools = [
+        Tool(
+            name="DataframeQueryTool",
+            func=query_dataframe,
+            description="Use this tool to query the dataframe."
+        )
+    ]
+
+    return initialize_agent(tools, llm, agent="zero-shot-react-description", verbose=True)
 
 # Define a function to query the agent.
 def query_pd_agent(agent, query):
