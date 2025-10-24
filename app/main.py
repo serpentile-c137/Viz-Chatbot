@@ -331,7 +331,7 @@ SYSTEM_PROMPT = (
     "- If the user's request is ambiguous or missing required information (column names, numeric vs categorical, bin counts, sample size), "
     "ask one concise clarifying question instead of guessing.\n\n"
     "4) Output format\n"
-    "- After a tool call, summarize the observation in 1–2 sentences and provide a clear answer or next step. "
+    "- After a tool call, summarize the observation in 1-2 sentences and provide a clear answer or next step. "
     "- If a plot tool returns 'PLOT:<path>' the final assistant message must include: 'Plot saved: <path>' followed by a short interpretation of the plot (1–2 sentences) and one suggested follow-up analysis.\n\n"
     "5) Error handling\n"
     "- If a tool returns an error, restate the error concisely and propose a minimal fix (e.g. correct column name or change parameter). "
@@ -363,7 +363,7 @@ agent_executor = AgentExecutor(
     agent=agent,
     tools=tools,
     verbose=False,   # optional: True for debug logs
-    max_iterations=3,
+    max_iterations=8,
 )
 
 # --- Public API ---
