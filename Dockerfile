@@ -23,11 +23,10 @@ COPY --chown=user ./requirements.txt requirements.txt
 # Install Python dependencies from the requirements.txt
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-# Copy the rest of the application files with proper ownership
+# Application codes
 COPY --chown=user ./app /app/app
 COPY --chown=user ./data /app/data
 
-# Copy the .env file with proper ownership
 COPY --chown=user .env /app/.env
 
 # Command to run the application using Streamlit
