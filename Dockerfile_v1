@@ -20,16 +20,14 @@ WORKDIR /app
 # Copy the requirements.txt file with proper ownership
 COPY --chown=user ./requirements.txt requirements.txt
 
-# Copy the .env file with proper ownership
-COPY --chown=user .env /app/.env
-
 # Install Python dependencies from the requirements.txt
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 # Application codes
 COPY --chown=user ./app /app/app
 COPY --chown=user ./data /app/data
-COPY --chown=user ./app/api.py /app/app/api.py 
 
-# Command to run both Streamlit and FastAPI applications
-CMD ["sh", "-c", "streamlit run app/app.py --server.port=8501 --server.address=0.0.0.0 & uvicorn app.api:app --host 0.0.0.0 --port 8000"]
+COPY --chown=user .env /app/.env
+
+# Command to run the application using Streamlit
+CMD ["streamlit", "run", "app/app.py", "--server.port=8501", "--server.address=0.0.0.0"]

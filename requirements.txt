@@ -7,3 +7,5 @@ langchain-community
 langgraph
 seaborn
 langchain==0.3.27
+fastapi
+uvicorn
